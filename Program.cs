@@ -23,7 +23,7 @@ namespace nanoframework.I2C.driver
         {
 
             //Using EEprom
-            Boolean Connect_EEprom = true;
+            Boolean Connect_EEprom = false;
 
             //Using SS1306 OLED display
             Boolean Connect_OLED = true;
