@@ -16,11 +16,13 @@
 using System;
 using Windows.Devices.I2c;
 using System.Threading;
+using nanoFramework.Hardware.Esp32;
+
 
 namespace nanoframework.i2c.SS1306
 {
-    
-    class OLED
+
+   class OLED
     {
 
         private static I2cDevice SS1306;
@@ -42,7 +44,7 @@ namespace nanoframework.i2c.SS1306
 
         // SSD1306 Commands
         enum Cmds
-            {
+        {
             DisplayOff = 0xAE,
             DisplayClockDiv = 0xD5,
             DisplayRatio = 0x80,
@@ -76,10 +78,43 @@ namespace nanoframework.i2c.SS1306
 
         // Constructor for i2c bus
         // Example: OLED oled = new OLED(OLED.DeviceConnectionSting.I2C1, 0x3C);
-        public OLED(string device, byte DeviceAddress)
+        public OLED(string i2cBus, byte DeviceAddress, int DataPin = 18, int ClockPin = 19)
         {
-            
-            SS1306 = I2cDevice.FromId( device, new I2cConnectionSettings(DeviceAddress) { BusSpeed = I2cBusSpeed.StandardMode, SharingMode = I2cSharingMode.Shared });
+           
+            // Pins can be changed from there defaults
+            if(i2cBus == DeviceConnectionSting.I2C1)
+            {
+                if (DataPin != 18)
+                {
+                    Configuration.SetPinFunction(DataPin, DeviceFunction.I2C1_DATA);
+
+                }
+
+                if (ClockPin != 19)
+                {
+                    Configuration.SetPinFunction(ClockPin, DeviceFunction.I2C1_CLOCK);
+
+                }
+
+            }
+
+            if (i2cBus == DeviceConnectionSting.I2C2)
+            {
+                if (DataPin != 25)
+                {
+                    Configuration.SetPinFunction(DataPin, DeviceFunction.I2C2_DATA);
+
+                }
+
+                if (ClockPin != 26)
+                {
+                    Configuration.SetPinFunction(ClockPin, DeviceFunction.I2C2_CLOCK);
+
+                }
+
+            }
+
+            SS1306 = I2cDevice.FromId(i2cBus, new I2cConnectionSettings(DeviceAddress) { BusSpeed = I2cBusSpeed.StandardMode, SharingMode = I2cSharingMode.Shared });
 
         }
 
@@ -88,7 +123,7 @@ namespace nanoframework.i2c.SS1306
         ///</summary>
         public void Initialize()
         {
-                      
+
             Command((byte)Cmds.DisplayOff);
             Command((byte)Cmds.DisplayClockDiv);
             Command((byte)Cmds.DisplayRatio);
@@ -121,9 +156,9 @@ namespace nanoframework.i2c.SS1306
         {
 
             Thread.Sleep(50);
-            
+
             SS1306.Write(new byte[] { 0x00, Cmd });
-        }        
+        }
 
         /// <summary>
         ///     ''' Sends the Write and Clear I2c transactions to the display
@@ -150,7 +185,7 @@ namespace nanoframework.i2c.SS1306
 
             Array.Copy(DisplayBuffer, 0, img, 1, 1024);
 
-           Thread.Sleep(50);
+            Thread.Sleep(50);
 
             // Send the bytes to the device
             SS1306.Write(img);
@@ -201,13 +236,13 @@ namespace nanoframework.i2c.SS1306
             }
 
             Display();
-            
+
         }
 
         /// <summary>
         ///     Clears the display
         /// </summary>
-        public  void ClearScreen()
+        public void ClearScreen()
 
         {
             DisplayBuffer[0] = 0;
@@ -236,7 +271,7 @@ namespace nanoframework.i2c.SS1306
 
             Display();
         }
-       
+
         /// <summary>
         ///  Clear one line on the device screen
         /// </summary>
@@ -247,7 +282,7 @@ namespace nanoframework.i2c.SS1306
             // font is 6 pixels wide sceen is 128 pixel
             string Str = "                     ";
 
-           this.Write(Horizonal, Line, Str);
+            this.Write(Horizonal, Line, Str);
 
         }
 
@@ -258,7 +293,7 @@ namespace nanoframework.i2c.SS1306
         {
             try
             {
-                
+
 
                 int MaxStringLength = 21;
 
@@ -266,12 +301,12 @@ namespace nanoframework.i2c.SS1306
 
                 string Spaces = string.Empty;
 
-                 for (var i = 1; i <= spacesNeeded; i++)
+                for (var i = 1; i <= spacesNeeded; i++)
 
                     Spaces += " ";
 
-                 return Spaces + Str;
-               
+                return Spaces + Str;
+
             }
 
             catch (Exception)
