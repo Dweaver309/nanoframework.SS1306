@@ -1,4 +1,4 @@
-# nanoframework.SS1306
+# nanoframework.SSD1306
 
 
 NanoFramework  SSD1306 Oled 128x64, 128x32, 64x48, 96x16 display driver
