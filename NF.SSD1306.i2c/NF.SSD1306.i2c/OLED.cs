@@ -81,15 +81,24 @@ namespace NF.SSD1306.i2c
 			0xda, 0x02, 0x81, 0xaf, 0xd9, 0x1f, 0xdb, 0x40, 0xa4, 0xa6, 0xaf
 		};
 		
-		private readonly uint Width;
-		private const uint Width128 = 128;
-		private const uint Width96 = 96;
+		private static int Width = 128;
+		
+		private readonly int Height;
 
-		private readonly uint Height;
+		private readonly int BufferSize;        
 
-		private readonly uint BufferSize;        
+		public static byte[] DisplayBuffer;
 
-		public static byte[] DisplayBuffer; 
+		private static byte[] pageCmd = new byte[]
+		{
+			0x00, // is command
+            0xB0, // page address (B0-B7)
+            0x00, // lower columns address =0
+            0x10, // upper columns address =0
+        };
+
+		private static byte[] pageData = new byte[Width + 1];
+
 
 		/// <summary>
 		/// Constructor for I2c bus
@@ -148,50 +157,24 @@ namespace NF.SSD1306.i2c
 
 		}
 
-		/// <summary>
-		/// Sends transactions to the display
-		/// </summary>
+		
 		private void Display()
 		{
-			byte ColumnAddress = 0x21;
-			Command(ColumnAddress);
+			var PageSize = Height / 8;
 
-			byte Reset = 0x0;
-			Command(Reset);
-			
-			if (Width == 96)
+			for (byte i = 0; i < PageSize; i++)
 			{
-				Command((Byte)Width96 - 1);
+				pageCmd[1] = (byte)(0xB0 + i);
+				SSD1306.Write(pageCmd);
 
+				pageData[0] = 0x40; // mark as data
+				Array.Copy(DisplayBuffer, i * Width, pageData, 1, Width);
+				SSD1306.Write(pageData);
 			}
-			else
-            {
-				Command((Byte)Width128 - 1);
-
-			};		
-
-			byte PageAddress = 0x22;
-			Command((Byte)PageAddress);
-
-			Command(Reset);
-
-			byte PageEndAddress = 0x37;
-			Command(PageEndAddress);
-
-			byte[] img = new byte[DisplayBuffer.Length + 1];
-
-			byte StartLine = 0x40;
-			img[0] = StartLine;
-			
-			Array.Copy(DisplayBuffer, 0, img, 1, DisplayBuffer.Length - 1);
-			
-			Thread.Sleep(50);
-
-			// Send the bytes to the device
-			SSD1306.Write(img);
-
 		}
-		
+
+
+
 		/// <summary>
 		/// Draws one character to the display
 		/// </summary>
